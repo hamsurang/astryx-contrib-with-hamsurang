@@ -13,5 +13,10 @@ notion:
     maintainerReview: In Maintainer-Review
     merged: Merged
     closed: Closed
+  # In Maintainer-Review 카드에만 붙는다. approve 와 merge 사이 구간을 눈으로 가른다.
+  icons:
+    approved: "✅"
+    changesRequested: "❗"
+    pending: "🔄"
 
 titleFormat: "[{name}] {title}"

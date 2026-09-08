@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildQueries } from './github.js'
+import { buildQueries, reviewDecisionOf } from './github.js'
 import type { Config } from './types.js'
 
 function configWith(logins: string[]): Config {
@@ -53,5 +53,27 @@ describe('buildQueries', () => {
 
   it('멤버가 없으면 쿼리를 만들지 않는다', () => {
     expect(buildQueries(configWith([]))).toEqual([])
+  })
+})
+
+describe('reviewDecisionOf', () => {
+  const node = (...states: string[]) => ({ latestReviews: { nodes: states.map((state) => ({ state })) } })
+
+  it('리뷰가 없으면 null 이다', () => {
+    expect(reviewDecisionOf(node())).toBe(null)
+    expect(reviewDecisionOf({ latestReviews: null })).toBe(null)
+  })
+
+  it('승인만 있으면 APPROVED 다', () => {
+    expect(reviewDecisionOf(node('APPROVED'))).toBe('APPROVED')
+  })
+
+  // 변경 요청이 하나라도 남아 있으면 다른 승인이 있어도 머지할 수 없다.
+  it('변경 요청이 승인을 이긴다', () => {
+    expect(reviewDecisionOf(node('APPROVED', 'CHANGES_REQUESTED'))).toBe('CHANGES_REQUESTED')
+  })
+
+  it('코멘트만 있으면 null 이다', () => {
+    expect(reviewDecisionOf(node('COMMENTED', 'DISMISSED'))).toBe(null)
   })
 })

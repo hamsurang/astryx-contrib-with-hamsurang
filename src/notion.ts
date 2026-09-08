@@ -113,6 +113,7 @@ export class NotionClient {
           key: keyText.trim() === '' ? null : keyText.trim(),
           status: (statusProp?.status ?? statusProp?.select)?.name ?? null,
           prUrl: props[names.prUrl]?.url ?? null,
+          icon: result.icon?.type === 'emoji' ? result.icon.emoji : null,
         })
       }
 
@@ -134,6 +135,7 @@ export class NotionClient {
         method: 'POST',
         body: JSON.stringify({
           parent: { database_id: this.databaseId },
+          ...(action.icon ? { icon: { emoji: action.icon } } : {}),
           properties: {
             [this.titleProp]: { title: [{ text: { content: action.title } }] },
             [names.status]: this.statusValue(action.status),
@@ -153,7 +155,10 @@ export class NotionClient {
     if (action.status !== undefined) properties[names.status] = this.statusValue(action.status)
     if (action.prUrl !== undefined) properties[names.prUrl] = { url: action.prUrl }
 
-    await this.call(`/pages/${action.pageId}`, { method: 'PATCH', body: JSON.stringify({ properties }) })
+    await this.call(`/pages/${action.pageId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ properties, ...(action.icon ? { icon: { emoji: action.icon } } : {}) }),
+    })
   }
 
   /** 백필 전용. 카드 본문의 북마크·임베드 URL 을 긁는다. */
