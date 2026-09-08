@@ -1,6 +1,8 @@
 # contrib-board-sync
 
-GitHub PR 상태를 Notion 기여 보드에 자동으로 반영한다.
+GitHub PR 상태를 [Notion 기여 보드에](https://hamsurang.notion.site/3c845f0c788b807ca1dadc35b16ff449?pvs=73) 자동으로 반영한다.
+
+<img width="1510" height="907" alt="image" src="https://github.com/user-attachments/assets/2284a1d9-15fd-4fbe-b536-ee827a9647df" />
 
 함수랑은 `facebook/astryx` 기여 현황을 Notion 보드로 관리한다. 상태 이동이 전부
 수동이라 실제 PR 상태와 금세 어긋난다. 이 도구는 GitHub을 진실의 원천으로 삼아
