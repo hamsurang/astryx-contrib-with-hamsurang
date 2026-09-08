@@ -175,6 +175,15 @@ titleFormat: "[{name}] {title}"
 어댑터 추상화나 플러그인 구조는 두지 않는다. 두 번째 사용자가 실제로 나타났을 때
 그 보드를 보고 정한다.
 
+### 실행 주기
+
+`sync.yml` 의 `schedule` 은 GitHub 이 실행을 보장하지 않는다. 실측에서 예정 슬롯의
+대부분이 건너뛰어졌다. 그래서 Vercel Cron 이 10 분마다 `/api/sync` 를 호출해
+`workflow_dispatch` 를 찌르고, `schedule` 은 그 백업으로 남겨 둔다. sync 는
+멱등이라 두 경로가 겹쳐도 안전하다.
+
+설정 절차는 [docs/vercel-cron-setup.md](docs/vercel-cron-setup.md) 에 있다.
+
 ### `members.yml`
 
 ```yaml
