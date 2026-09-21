@@ -40,7 +40,7 @@ PR이 *어느 레포를 향하는지*가 리뷰 단계를 가른다. 라벨이�
 ```
 {author.login}:{headRefName}
 
-Kyujenius:fix/dropdown-menu-radio-group-preview
+kyu-rong:fix/dropdown-menu-radio-group-preview
 ```
 
 fork main으로 쏜 PR과 upstream으로 쏜 PR은 **서로 다른 PR**이라 URL도 번호도
@@ -190,7 +190,7 @@ titleFormat: "[{name}] {title}"
 
 ```yaml
 members:
-  - login: Kyujenius
+  - login: kyu-rong
     # name: 홍규진      # 생략하면 GitHub 프로필 이름을 쓴다
     # notionUserId: 6e6f3595-...   # 있으면 카드 생성 시 담당자로 지정한다
 ```

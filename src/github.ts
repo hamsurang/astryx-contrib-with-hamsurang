@@ -141,10 +141,13 @@ export async function fetchPullRequests(config: Config, token: string): Promise<
     if (seen.has(node.url)) continue
     seen.add(node.url)
 
+    // members.yml 의 name 이 GitHub 프로필 이름보다 우선한다.
+    const member = config.members.find((m) => m.login === node.author!.login)
+
     prs.push({
       key: `${node.author.login}:${node.headRefName}`,
       login: node.author.login,
-      displayName: node.author.name ?? null,
+      displayName: member?.name ?? node.author.name ?? null,
       title: node.title,
       url: node.url,
       repo: node.repository.nameWithOwner,
