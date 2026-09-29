@@ -25,6 +25,19 @@ function targetStatus(pr: PullRequest, config: Config): string | null {
   return pr.state === 'MERGED' ? s.merged : s.closed
 }
 
+/**
+ * Maintainer-Review 카드의 아이콘. approve 와 merge 사이가 길어서 그 구간을 눈으로
+ * 구분하려는 것이다. 다른 칸은 손대지 않는다 — 사람이 직접 붙인 아이콘을 지우지
+ * 않기 위해서다.
+ */
+function targetIcon(pr: PullRequest, status: string, config: Config): string | undefined {
+  const icons = config.notion.icons
+  if (!icons || status !== config.notion.status.maintainerReview) return undefined
+  if (pr.reviewDecision === 'APPROVED') return icons.approved
+  if (pr.reviewDecision === 'CHANGES_REQUESTED') return icons.changesRequested
+  return icons.pending
+}
+
 function formatTitle(pr: PullRequest, config: Config): string {
   return config.titleFormat
     .replaceAll('{name}', pr.displayName ?? pr.login)
@@ -75,6 +88,7 @@ export function plan(prs: PullRequest[], cards: Card[], config: Config): PlanRes
     if (status === null) continue
 
     const card = byKey.get(key)
+    const icon = targetIcon(pr, status, config)
 
     if (!card) {
       const assigneeIds = assigneesFor(pr, status, config)
@@ -86,6 +100,7 @@ export function plan(prs: PullRequest[], cards: Card[], config: Config): PlanRes
         prUrl: pr.url,
         date: pr.createdAt.slice(0, 10),
         ...(assigneeIds.length > 0 ? { assigneeIds } : {}),
+        ...(icon ? { icon } : {}),
       })
       continue
     }
@@ -93,7 +108,12 @@ export function plan(prs: PullRequest[], cards: Card[], config: Config): PlanRes
     const update: UpdateAction = { kind: 'update', pageId: card.pageId, key }
     if (card.status !== status) update.status = status
     if (card.prUrl !== pr.url) update.prUrl = pr.url
-    if (update.status !== undefined || update.prUrl !== undefined) actions.push(update)
+    // 아이콘만 바뀌는 경우가 이 기능의 핵심이다. approve 가 나도 상태는
+    // Maintainer-Review 그대로라, 아이콘을 변경 감지에 넣지 않으면 영영 갱신되지 않는다.
+    if (icon !== undefined && card.icon !== icon) update.icon = icon
+    if (update.status !== undefined || update.prUrl !== undefined || update.icon !== undefined) {
+      actions.push(update)
+    }
   }
 
   return { actions, warnings }

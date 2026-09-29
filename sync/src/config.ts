@@ -14,6 +14,7 @@ export function loadConfig(dir: string, membersDir = dir): Config {
 
   const props = must(raw.notion?.properties, 'notion.properties')
   const status = must(raw.notion?.status, 'notion.status')
+  const icons = raw.notion?.icons
   const members: Member[] = membersRaw.members ?? []
 
   if (members.length === 0) throw new Error('members.yml 의 멤버가 비어 있다')
@@ -35,6 +36,15 @@ export function loadConfig(dir: string, membersDir = dir): Config {
         merged: must(status.merged, 'notion.status.merged'),
         closed: must(status.closed, 'notion.status.closed'),
       },
+      ...(icons
+        ? {
+            icons: {
+              approved: must(icons.approved, 'notion.icons.approved'),
+              changesRequested: must(icons.changesRequested, 'notion.icons.changesRequested'),
+              pending: must(icons.pending, 'notion.icons.pending'),
+            },
+          }
+        : {}),
     },
     titleFormat: must(raw.titleFormat, 'titleFormat'),
     members,

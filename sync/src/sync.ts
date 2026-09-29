@@ -8,7 +8,7 @@ import type { Action } from './types.js'
 function describe(action: Action): string {
   return action.kind === 'create'
     ? `  생성  ${action.status.padEnd(22)} ${action.title}`
-    : `  갱신  ${(action.status ?? '(상태 유지)').padEnd(22)} ${action.key}`
+    : `  갱신  ${(action.status ?? '(상태 유지)').padEnd(22)} ${action.key}${action.icon ? ` → ${action.icon}` : ''}`
 }
 
 export async function runSync(options: { dryRun: boolean }): Promise<number> {

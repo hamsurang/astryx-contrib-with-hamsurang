@@ -5,7 +5,7 @@
 
 | 패키지 | 무엇 | 어디서 도나 |
 | --- | --- | --- |
-| [`sync/`](sync/README.md) | GitHub PR 상태를 Notion 기여 보드에 10분마다 반영 | GitHub Actions |
+| [`sync/`](sync/README.md) | GitHub PR 상태를 Notion 기여 보드에 10분마다 반영 | GitHub Actions (Vercel Cron 이 `api/sync.ts` 로 `workflow_dispatch` 를 찌른다, [설정](docs/vercel-cron-setup.md)) |
 | [`mcp/`](mcp/README.md) | astryx 기여에 특화된 MCP 서버 (이슈 선별 → 코드 이해 → 구현 → 셀프 리뷰 → 번역) | 각자 로컬의 Claude Code / Codex |
 
 루트 `members.yml`은 둘 다 읽는다. sync는 카드 담당자 지정에, MCP는 "팀원이 이미 잡은 이슈"

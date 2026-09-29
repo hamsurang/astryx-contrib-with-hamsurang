@@ -18,6 +18,11 @@ const config: Config = {
   members: [{ login: 'Kyujenius' }],
 }
 
+const withIcons: Config = {
+  ...config,
+  notion: { ...config.notion, icons: { approved: '✅', changesRequested: '❗', pending: '🔄' } },
+}
+
 function pr(over: Partial<PullRequest> = {}): PullRequest {
   return {
     key: 'Kyujenius:fix/a',
@@ -28,13 +33,14 @@ function pr(over: Partial<PullRequest> = {}): PullRequest {
     repo: 'facebook/astryx',
     isUpstream: true,
     state: 'OPEN',
+    reviewDecision: null,
     createdAt: '2026-09-01T00:00:00Z',
     ...over,
   }
 }
 
 function card(over: Partial<Card> = {}): Card {
-  return { pageId: 'p1', key: 'Kyujenius:fix/a', status: null, prUrl: null, ...over }
+  return { pageId: 'p1', key: 'Kyujenius:fix/a', status: null, prUrl: null, icon: null, ...over }
 }
 
 describe('plan — 카드 생성', () => {
@@ -190,5 +196,48 @@ describe('plan — 경고', () => {
     expect(actions).toHaveLength(1)
     expect(actions[0]).toMatchObject({ pageId: 'p1' })
     expect(warnings[0]).toContain('Kyujenius:fix/a')
+  })
+})
+
+describe('plan — Maintainer-Review 아이콘', () => {
+  it('리뷰 결정이 없으면 pending 아이콘으로 만든다', () => {
+    const { actions } = plan([pr()], [], withIcons)
+    expect(actions[0]).toMatchObject({ kind: 'create', status: 'In Maintainer-Review', icon: '🔄' })
+  })
+
+  it('approve 되면 approved 아이콘으로 만든다', () => {
+    const { actions } = plan([pr({ reviewDecision: 'APPROVED' })], [], withIcons)
+    expect(actions[0]).toMatchObject({ kind: 'create', icon: '✅' })
+  })
+
+  it('변경 요청이면 changesRequested 아이콘으로 만든다', () => {
+    const { actions } = plan([pr({ reviewDecision: 'CHANGES_REQUESTED' })], [], withIcons)
+    expect(actions[0]).toMatchObject({ kind: 'create', icon: '❗' })
+  })
+
+  // 이 기능의 핵심. 상태는 Maintainer-Review 그대로고 아이콘만 바뀌는 구간이다.
+  it('상태가 그대로여도 approve 되면 아이콘만 갱신한다', () => {
+    const existing = card({ status: 'In Maintainer-Review', prUrl: pr().url, icon: '🔄' })
+    const { actions } = plan([pr({ reviewDecision: 'APPROVED' })], [existing], withIcons)
+    expect(actions).toEqual([{ kind: 'update', pageId: 'p1', key: 'Kyujenius:fix/a', icon: '✅' }])
+  })
+
+  it('아이콘이 이미 같으면 아무 작업도 하지 않는다', () => {
+    const existing = card({ status: 'In Maintainer-Review', prUrl: pr().url, icon: '✅' })
+    const { actions } = plan([pr({ reviewDecision: 'APPROVED' })], [existing], withIcons)
+    expect(actions).toEqual([])
+  })
+
+  // 사람이 손으로 붙인 아이콘을 지우지 않기 위해 다른 칸은 건드리지 않는다.
+  it('Maintainer-Review 가 아닌 칸의 아이콘은 건드리지 않는다', () => {
+    const merged = pr({ state: 'MERGED', reviewDecision: 'APPROVED' })
+    const existing = card({ status: 'Merged', prUrl: merged.url, icon: '🙂' })
+    const { actions } = plan([merged], [existing], withIcons)
+    expect(actions).toEqual([])
+  })
+
+  it('icons 설정이 없으면 아이콘을 쓰지 않는다', () => {
+    const { actions } = plan([pr({ reviewDecision: 'APPROVED' })], [], config)
+    expect(actions[0]).not.toHaveProperty('icon')
   })
 })

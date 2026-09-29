@@ -3,7 +3,9 @@
 > 이 패키지는 workspace 의 `sync/` 에 있다. 명령은 레포 루트에서 `pnpm -F sync <script>` 로 부르고,
 > `members.yml` 은 레포 루트에 있다 (MCP 와 공유).
 
-GitHub PR 상태를 Notion 기여 보드에 자동으로 반영한다.
+GitHub PR 상태를 [Notion 기여 보드에](https://hamsurang.notion.site/3c845f0c788b807ca1dadc35b16ff449?pvs=73) 자동으로 반영한다.
+
+<img width="1510" height="907" alt="image" src="https://github.com/user-attachments/assets/2284a1d9-15fd-4fbe-b536-ee827a9647df" />
 
 함수랑은 `facebook/astryx` 기여 현황을 Notion 보드로 관리한다. 상태 이동이 전부
 수동이라 실제 PR 상태와 금세 어긋난다. 이 도구는 GitHub을 진실의 원천으로 삼아
@@ -41,7 +43,7 @@ PR이 *어느 레포를 향하는지*가 리뷰 단계를 가른다. 라벨이�
 ```
 {author.login}:{headRefName}
 
-Kyujenius:fix/dropdown-menu-radio-group-preview
+kyu-rong:fix/dropdown-menu-radio-group-preview
 ```
 
 fork main으로 쏜 PR과 upstream으로 쏜 PR은 **서로 다른 PR**이라 URL도 번호도
@@ -163,18 +165,35 @@ notion:
     maintainerReview: In Maintainer-Review
     merged:           Merged
     closed:           Closed
+  icons:                      # 생략하면 아이콘을 건드리지 않는다
+    approved:         "✅"
+    changesRequested: "❗"
+    pending:          "🔄"
 
 titleFormat: "[{name}] {title}"
 ```
 
+`icons` 는 In Maintainer-Review 카드에만 붙는다. approve 와 merge 사이가 길어서
+그 구간을 칸을 나누지 않고 눈으로 가르려는 것이다. 다른 칸의 아이콘은 건드리지
+않는다. 사람이 손으로 붙여둔 걸 지우지 않기 위해서다.
+
 어댑터 추상화나 플러그인 구조는 두지 않는다. 두 번째 사용자가 실제로 나타났을 때
 그 보드를 보고 정한다.
+
+### 실행 주기
+
+`sync.yml` 의 `schedule` 은 GitHub 이 실행을 보장하지 않는다. 실측에서 예정 슬롯의
+대부분이 건너뛰어졌다. 그래서 Vercel Cron 이 10 분마다 `/api/sync` 를 호출해
+`workflow_dispatch` 를 찌르고, `schedule` 은 그 백업으로 남겨 둔다. sync 는
+멱등이라 두 경로가 겹쳐도 안전하다.
+
+설정 절차는 [docs/vercel-cron-setup.md](../docs/vercel-cron-setup.md) 에 있다.
 
 ### `members.yml`
 
 ```yaml
 members:
-  - login: Kyujenius
+  - login: kyu-rong
     # name: 홍규진      # 생략하면 GitHub 프로필 이름을 쓴다
     # notionUserId: 6e6f3595-...   # 있으면 카드 생성 시 담당자로 지정한다
 ```

@@ -1,4 +1,4 @@
-import type { Config, PrState, PullRequest } from './types.js'
+import type { Config, PrState, PullRequest, ReviewDecision } from './types.js'
 
 const ENDPOINT = 'https://api.github.com/graphql'
 const MAX_QUERY_LENGTH = 256
@@ -10,6 +10,7 @@ query($q: String!, $after: String) {
     nodes {
       ... on PullRequest {
         title url state createdAt headRefName
+        latestReviews(first: 10) { nodes { state } }
         author { login ... on User { name } }
         repository { nameWithOwner }
       }
@@ -58,6 +59,7 @@ type SearchNode = {
   state: PrState
   createdAt: string
   headRefName: string
+  latestReviews: { nodes: ({ state: string } | null)[] } | null
   author: { login: string; name?: string | null } | null
   repository: { nameWithOwner: string } | null
 }
@@ -70,6 +72,18 @@ type SearchResponse = {
       nodes: (SearchNode | null)[]
     }
   }
+}
+
+/**
+ * 리뷰 결정. reviewDecision 은 브랜치 보호 규칙이 없는 레포에서 항상 null 이라 쓸 수
+ * 없다. latestReviews 는 리뷰어별 최신 리뷰만 주므로 GitHub 이 보여주는 것과 같다.
+ * 변경 요청이 하나라도 남아 있으면 다른 승인이 있어도 변경 요청이 이긴다.
+ */
+export function reviewDecisionOf(node: Pick<SearchNode, 'latestReviews'>): ReviewDecision {
+  const states = (node.latestReviews?.nodes ?? []).map((r) => r?.state)
+  if (states.includes('CHANGES_REQUESTED')) return 'CHANGES_REQUESTED'
+  if (states.includes('APPROVED')) return 'APPROVED'
+  return null
 }
 
 async function runQuery(q: string, token: string): Promise<SearchNode[]> {
@@ -127,15 +141,19 @@ export async function fetchPullRequests(config: Config, token: string): Promise<
     if (seen.has(node.url)) continue
     seen.add(node.url)
 
+    // members.yml 의 name 이 GitHub 프로필 이름보다 우선한다.
+    const member = config.members.find((m) => m.login === node.author!.login)
+
     prs.push({
       key: `${node.author.login}:${node.headRefName}`,
       login: node.author.login,
-      displayName: node.author.name ?? null,
+      displayName: member?.name ?? node.author.name ?? null,
       title: node.title,
       url: node.url,
       repo: node.repository.nameWithOwner,
       isUpstream: node.repository.nameWithOwner === config.upstream,
       state: node.state,
+      reviewDecision: reviewDecisionOf(node),
       createdAt: node.createdAt,
     })
   }
