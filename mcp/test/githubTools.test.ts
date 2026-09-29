@@ -32,6 +32,7 @@ describe('people', () => {
   test('maintainers come from spec owners/approved_by; standing ladder', () => {
     const m = maintainersFromRecords(ctx.index);
     expect(m.has('cixzhang')).toBe(true);
+    expect(maintainersFromRecords({ docs: new Map() } as never).has('cixzhang')).toBe(true);
     expect(standingOf('cixzhang', 'CONTRIBUTOR', m)).toEqual({ standing: 'maintainer', reason: 'named as owner/approved_by on a spec record' });
     expect(standingOf('astracat-bot', 'NONE', m).standing).toBe('bot');
     expect(standingOf('x', 'MEMBER', m).standing).toBe('maintainer');

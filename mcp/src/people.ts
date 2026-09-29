@@ -5,12 +5,15 @@ export type Standing = 'maintainer' | 'member' | 'contributor' | 'community' | '
 /** Known review bots on facebook/astryx; their approvals are automation, not a maintainer decision. */
 export const BOTS = new Set(['astracat-bot', 'vercel', 'github-actions', 'dependabot', 'facebook-github-bot']);
 
+/** Maintainers pinned by hand; the records list is derived and may lag. */
+export const KNOWN_MAINTAINERS = new Set(['cixzhang']);
+
 /**
- * Logins named as `owners` or `approved_by` on any spec record. Meta employees show up as plain
- * CONTRIBUTOR in author_association, so the records are the reliable maintainer list.
+ * KNOWN_MAINTAINERS plus every login named as `owners` or `approved_by` on a spec record. Meta
+ * employees show up as plain CONTRIBUTOR in author_association, so the records are the reliable list.
  */
 export function maintainersFromRecords(index: KnowledgeIndex): Set<string> {
-  const out = new Set<string>();
+  const out = new Set<string>(KNOWN_MAINTAINERS);
   for (const doc of index.docs.values()) {
     for (const l of [...(doc.frontmatter?.owners ?? []), ...(doc.frontmatter?.approved_by ?? [])]) out.add(l);
   }
