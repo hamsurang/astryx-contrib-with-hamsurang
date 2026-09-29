@@ -1,0 +1,8 @@
+{
+  "ledgerVersion": 1,
+  "updated": "2026-08-27",
+  "rubricVersion": "1.2.1",
+  "components": [
+    { "component": "Button", "package": "core", "status": "audited", "score": 91.2, "grade": "A", "sections": {} }
+  ]
+}
