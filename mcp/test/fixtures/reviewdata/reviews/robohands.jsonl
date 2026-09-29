@@ -1,0 +1,4 @@
+{"pr":6001,"at":"2026-09-20T00:00:00Z","state":"CHANGES_REQUESTED","commit":"abc1234","body":"Semantic verdict: request changes\n\nThe composer drops its name when busy.\n\n[Reviewed by Robohands]","files":["packages/core/src/Chat/ChatComposer.tsx",".changeset/x.md"]}
+{"pr":6002,"at":"2026-09-22T00:00:00Z","state":"APPROVED","commit":"def5678","body":"Thanks, clean.","files":["packages/core/src/Chat/ChatDrawer.tsx","apps/storybook/stories/Chat.stories.tsx"]}
+{"pr":5000,"at":"2026-08-01T00:00:00Z","state":"APPROVED","commit":"0000000","body":"Old, no files."}
+{"pr":5001,"at":"2026-08-02T00:00:00Z","state":"COMMENTED","commit":"1111111","body":"Unrelated dir.","files":["packages/core/src/Badge/Badge.tsx"]}

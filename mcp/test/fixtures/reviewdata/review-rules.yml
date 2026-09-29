@@ -1,0 +1,37 @@
+rules:
+  - id: always-rule
+    axis: "§8"
+    trigger: { always: true }
+    sentence: "Every claim needs a measurement."
+    check: "Attach one."
+    examples: [1]
+  - id: impl-rule
+    axis: "§4"
+    trigger: { roles: [impl] }
+    sentence: "Siblings."
+    check: "Sweep."
+    examples: [2, 3]
+  - id: keyword-rule
+    axis: "§2"
+    trigger: { keywords: [onclick, "aria-label"] }
+    sentence: "Callbacks keep their target."
+    check: "Probe."
+    examples: []
+  - id: path-rule
+    axis: "§3"
+    trigger: { paths: ["packages/cli/**"] }
+    sentence: "Windows."
+    check: "Shell."
+    examples: [4]
+  - id: changeset-missing
+    axis: "§7"
+    trigger: { missing: changeset }
+    sentence: "Add the changeset."
+    check: "Add it."
+    examples: [5]
+  - id: test-missing
+    axis: "§5"
+    trigger: { missing: test }
+    sentence: "Red→green."
+    check: "Add a test."
+    examples: [6]

@@ -1,4 +1,5 @@
 import { KnowledgeIndex } from './index.js';
+import { realGit, type GitRunner } from './git.js';
 import { realGh, resolveCacheDir, type GhRunner } from './sources/gh.js';
 
 export const DEFAULT_UPSTREAM = 'facebook/astryx';
@@ -12,12 +13,14 @@ export interface ToolContext {
   /** owner/repo the tools read PRs and issues from. */
   upstream: string;
   cacheDir: string;
+  /** `git` runner for local diffs; tests inject a replay. */
+  git: GitRunner;
   /** Clock; tests pin it. */
   now: () => number;
   rebuild(): Promise<void>;
 }
 
-export async function createContext(opts: { repoRoot: string; wikiDir?: string; gh?: GhRunner; upstream?: string; cacheDir?: string; now?: () => number }): Promise<ToolContext> {
+export async function createContext(opts: { repoRoot: string; wikiDir?: string; gh?: GhRunner; git?: GitRunner; upstream?: string; cacheDir?: string; now?: () => number }): Promise<ToolContext> {
   const ctx: ToolContext = {
     repoRoot: opts.repoRoot,
     wikiDir: opts.wikiDir,
@@ -25,6 +28,7 @@ export async function createContext(opts: { repoRoot: string; wikiDir?: string; 
     gh: opts.gh ?? realGh,
     upstream: opts.upstream ?? process.env.ASTRYX_UPSTREAM ?? DEFAULT_UPSTREAM,
     cacheDir: opts.cacheDir ?? resolveCacheDir(),
+    git: opts.git ?? realGit,
     now: opts.now ?? Date.now,
     async rebuild() {
       ctx.index = await KnowledgeIndex.build({ repoRoot: ctx.repoRoot, wikiDir: ctx.wikiDir });

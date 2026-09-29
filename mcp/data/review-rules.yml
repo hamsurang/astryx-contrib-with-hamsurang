@@ -1,0 +1,212 @@
+# What the maintainer's review bot re-checks on every head, distilled from its reviews on
+# facebook/astryx (data/reviews/robohands.jsonl). One rule per row; `examples` are PR numbers.
+#
+# trigger fields (any that match fires the rule):
+#   always:   true                         fires on every diff
+#   paths:    [glob, ...]                  picomatch against changed paths
+#   roles:    [impl|stylex|test|a11y|spec|doc|story|changeset|docs|other]
+#   keywords: [substring, ...]            lower-cased, against added lines and the claim/PR body
+#   missing:  changeset|test               fires when the diff lacks that role while touching packages/*
+rules:
+  - id: scope-every-hunk
+    axis: "§1 Scope discipline"
+    trigger: { always: true }
+    sentence: "Unrelated behavior change, however small, is a blocker: \"detaching its form owner is an unrelated behavior change\"; a change that \"does not affect the reported path\" can be omitted."
+    check: "For each hunk, state which sentence of the claim requires it. Remove drive-by docs, extra assertions on private mechanisms, and new props that make callers describe DOM layout."
+    examples: [6158, 5776, 5728, 6167, 6090, 6078]
+
+  - id: overlapping-pr
+    axis: "§1 Scope discipline"
+    trigger: { always: true }
+    sentence: "\"keep this PR to LayoutFooter and let the radio fix converge in #5976\"; \"rebase and drop the superseded fixture… if no independent change remains, close this PR\"."
+    check: "Search open PRs touching the same files; narrow to the part no other PR owns."
+    examples: [5975, 5962]
+
+  - id: changeset-class
+    axis: "§7 Accounting"
+    trigger: { roles: [changeset] }
+    sentence: "Changeset only when consumer-visible: \"drop the changeset; this PR changes only Storybook/audit files\" — but \"add the patch changeset required for this consumer-visible fix\". Class is decided by what actually worked before."
+    check: "patch vs [breaking]/minor; delete it if only stories/audit/tests changed; add contributor credit."
+    examples: [5872, 6078, 5972, 6109, 5963, 5975]
+
+  - id: changeset-missing
+    axis: "§7 Accounting"
+    trigger: { missing: changeset }
+    sentence: "\"add the patch changeset required for this consumer-visible fix\"."
+    check: "Any change under packages/* that a consumer can observe needs .changeset/<name>.md."
+    examples: [6078, 5972, 5963]
+
+  - id: issue-end-state
+    axis: "§1b Required end state"
+    trigger: { keywords: [fixes, closes, resolves, issue] }
+    sentence: "The reviewer reads the issue's \"Expected behavior\" as an acceptance test and checks the rendered result, not the mechanism: \"the issue requires at least two radio choices on first load\"."
+    check: "Render the issue's expected state on the exact head and describe it; record document.activeElement at load and after each keyboard step."
+    examples: [5976, 5975, 5982]
+
+  - id: callback-contract
+    axis: "§2 Behavior vs main"
+    trigger: { keywords: [onclick, onkeydown, onchange, onpress, currenttarget, preventdefault, stoppropagation, capture, addeventlistener] }
+    sentence: "Released callbacks keep their target, phase, count and cancellation: \"onClick now receives the invisible BUTTON rather than the card surface\"; \"invokes the consumer twice\"; \"preventDefault() should remain the cancellation path\"."
+    check: "Probe currentTarget tag, invocation count, phase and cancellation on main and on the head at the same coordinates."
+    examples: [6150, 5853, 6101, 6184]
+
+  - id: public-types
+    axis: "§2 Behavior vs main"
+    trigger: { keywords: [export interface, export type, export function, "props {", "props extends", required, "?:"] , roles: [impl] }
+    sentence: "Public types stay source-compatible under a patch: \"a valid pre-PR object no longer compiles\"; renaming a prop \"under a patch changeset\"; a union member escaping a rejection type."
+    check: "Compile an old consumer literal against the head; keep exported shapes; add @ts-expect-error cases for intended rejections."
+    examples: [5783, 5884, 6097, 6124]
+
+  - id: pixel-identity
+    axis: "§2 Behavior vs main"
+    trigger: { keywords: [stylex, color, contrast, theme, css, background, border, padding, margin, gap, shadow, opacity] }
+    sentence: "Pixels/CSS byte-identity when claimed: \"seven published theme objects and CSS remain byte-identical\"; \"Butter's white title drops to 1.34:1\"; markers \"0.5.2 renders rgb(116, 91, 0), while this head renders rgb(110, 53, 0)\"."
+    check: "Diff rendered pixels or CSS bytes against main for every theme you claim unchanged; measure contrast (≥ 4.5:1 for 14px text) in every theme."
+    examples: [6037, 5847, 6052, 5832, 6034]
+
+  - id: focus-visibility
+    axis: "§2 Behavior vs main"
+    trigger: { keywords: [outline, focus-visible, tabindex, overflow, clip-path, "position: 'sticky'", contain] }
+    sentence: "\"computes a 2px outline but paints no focus box\" after layout changes; overflow: hidden turns a region into a scroll container and breaks sticky."
+    check: "Tab to every changed element in Chromium and screenshot the focus ring; check sticky/scroll semantics after overflow changes."
+    examples: [6038, 6043, 6090, 5776, 5989]
+
+  - id: disabled-inertness
+    axis: "§2 Behavior vs main"
+    trigger: { keywords: [disabled, isdisabled, busy, isloading, pending, aria-disabled] }
+    sentence: "Disabled inertness on every input path: click, middle click, context menu, drag, href following; pending actions expose one busy presentation and block duplicates."
+    check: "Enumerate every input path while disabled/busy and prove each is inert; controlled values replace optimistic ones immediately."
+    examples: [6150, 5978, 5999, 6000]
+
+  - id: performance-vs-main
+    axis: "§2 Behavior vs main"
+    trigger: { keywords: [resizeobserver, mutationobserver, intersectionobserver, findindex, indexof, "sort(", "new set(", "new map(", "while ("] }
+    sentence: "Performance vs main, measured at two or three sizes: \"crossing 50 items performed 1,275 comparisons versus 0 on main\"; \"hook work 1→2, 10→20, 50→100\"; bundle \"10.8→17.1 kB minified\"."
+    check: "Count operations/observers/renders at N=1/10/50 on main and head; report bundle size if a dependency or module was added."
+    examples: [6078, 5783, 5989, 6034, 5956]
+
+  - id: input-shapes
+    axis: "§3 Input enumeration"
+    trigger: { keywords: [typeof, array.isarray, instanceof, startswith, endswith, regexp, "match(", "switch ("] }
+    sentence: "Every accepted form of an input, one case per branch: aliases as object/array/hook × exact/prefix/wildcard; selectors through :is, :not, :where, @scope; mixed integer/decimal stops."
+    check: "List every condition the touched code branches on and every input form it accepts; write one test per branch, both directions of every guard (quiet when working, warns when broken)."
+    examples: [6109, 5932, 6121, 5992, 6124]
+
+  - id: state-matrix
+    axis: "§3 Input enumeration"
+    trigger: { roles: [impl, stylex] }
+    sentence: "State matrix: LTR and RTL; fine and coarse pointer; light and dark across all seven themes; all sizes; prefers-reduced-motion; forced colors."
+    check: "Render the changed state in RTL, coarse pointer, every theme and size; add or update the RTL registry row."
+    examples: [6057, 6037, 5916, 4898, 5832]
+
+  - id: timing-lifecycle
+    axis: "§3 Input enumeration"
+    trigger: { keywords: [useeffect, unmount, cleanup, ref, settimeout, requestanimationframe, pointercancel, activity, portal, remount] }
+    sentence: "Timing and lifecycle: state captured at last render vs current registration; pointer → unmount → Tab → remount; replacing the element behind a ref; pointercancel and iframe crossing."
+    check: "Walk the lifecycle sequences the reviewer names and assert the state after each step."
+    examples: [6097, 5881, 5783, 6070, 6101, 5858, 5817]
+
+  - id: environment
+    axis: "§3 Input enumeration"
+    trigger: { paths: ["packages/cli/**", "packages/build/**", "scripts/**", "internal/**", ".github/**"] }
+    sentence: "Environment: macOS /var vs /private/var in fixtures; Windows spawnSync('pnpm') needs cmd.exe; junction retargeting; Node CLI --json contract."
+    check: "Make fixtures path-portable; spawn through the platform shell; keep the CLI's JSON output shape."
+    examples: [5932, 5843, 5908, 5907, 6092]
+
+  - id: story-truth
+    axis: "§3 Input enumeration"
+    trigger: { roles: [story] }
+    sentence: "Story/fixture truth: argTypes.onClick.action injects a callback into every story so 'static' states are not static; a preview whose onChange is a no-op cannot show selection."
+    check: "Make sure the story exercises the slot/state it claims; no injected callbacks on 'static' stories; controls must do something."
+    examples: [6120, 5919, 5917]
+
+  - id: sibling-sweep
+    axis: "§4 Sibling consistency"
+    trigger: { roles: [impl] }
+    sentence: "\"cover those paths through their shared highlight owner, or narrow #6077\"; \"include the rich-text package so all 19 changed controls are protected\"; \"Six shipped vertical examples/templates omit the hook's new direction\"."
+    check: "Same defect in a sibling sharing the owner? Fix through the owner or narrow the issue and say so. Same fixture pattern in templates/examples/other packages? Include them."
+    examples: [6078, 6085, 5783, 6178, 6155]
+
+  - id: mutation-check
+    axis: "§5 Tests that guard"
+    trigger: { roles: [test, a11y] }
+    sentence: "The reviewer reverts the fix and reruns: \"every changed test still passed (36/36)\"; \"still passes with InteractivePreview reverted to main\". A test that passes with the fix reverted is not evidence."
+    check: "Revert the fix and run the suite: the new test must fail through the real path (delegated handler, preview, resolver), not a helper called directly. Delete tests that lock private mechanisms."
+    examples: [5912, 5917, 6034, 6078, 6041, 6167]
+
+  - id: test-missing
+    axis: "§5 Tests that guard"
+    trigger: { missing: test }
+    sentence: "\"focused red→green regression\" is the accepted phrasing: a regression test must fail on the parent and pass on the head."
+    check: "Add a test that fails on main and passes here, driving the real path."
+    examples: [5951, 5884, 5817, 5956]
+
+  - id: exact-head-evidence
+    axis: "§6 Evidence"
+    trigger: { always: true }
+    sentence: "\"Exact head\" means the SHA that will be reviewed: receipts naming another SHA are \"unbound\"; before/after must be the same story, viewport and light/dark state; iOS claims need device/OS/Safari version."
+    check: "Every measurement in the PR body names the head SHA, story, viewport and theme. Numbers, not adjectives."
+    examples: [6120, 6162, 6026, 6085, 6034, 6057]
+
+  - id: docs-match-behavior
+    axis: "§7 Accounting"
+    trigger: { roles: [doc, docs] }
+    sentence: "Docs match behavior: prop docs when a default becomes contextual (\"English, Chinese, dense, and source docs\"); inherited handlers and cancellation documented in .doc.mjs; do not document a command that does not exist yet."
+    check: "Every changed default/prop/behavior appears in the .doc.mjs and the i18n docs; remove stale sentences."
+    examples: [5762, 6040, 6109, 5987, 5992]
+
+  - id: records-agree
+    axis: "§7 Accounting"
+    trigger: { roles: [spec] }
+    sentence: "Records/specs agree with what ships: a record claiming a route reaches three painters when it reaches one; authority: current while listing unverified invariants; spec PR bodies need the overlap-search note."
+    check: "Each contract line in the record maps to a test or a measurement; put the overlap search (owning path, terms, open work) in the PR body."
+    examples: [6116, 6147, 6120, 6145, 6129, 6000, 6174, 6140]
+
+  - id: authority-first
+    axis: "§7 Accounting"
+    trigger: { keywords: [authority, "until authority settles", needs-scoping] }
+    sentence: "Issues closed \"until current Astryx authority settles…; this should not invite implementation\" want a record, not code."
+    check: "If the issue was closed on authority, write the record and stop; do not implement."
+    examples: [6132, 6163, 6165, 6166]
+
+  - id: theming-metadata
+    axis: "§7 Accounting"
+    trigger: { keywords: [themeprops, visualprops, themingtargets, data-astryx, "'--"] }
+    sentence: "A newly styled state must appear in the target's visualProps / themingTargets; owned states like disabled on step-label."
+    check: "Every new themeProps state/slot is declared in the theming metadata and the theme docs."
+    examples: [6037, 5728]
+
+  - id: rtl-accounting
+    axis: "§7 Accounting"
+    trigger: { keywords: [rtl, "direction", inline-start, inline-end, insetinline, marginInline, paddingInline, "float:", textAlign, isRtl] }
+    sentence: "RTL accounting: every touched component measured or verified-N/A; no stale rows after main moves; a verified-N/A row cannot hide a real RTL path."
+    check: "Run rtl:audit --filter <Comp> on the head or update verified-not-applicable.json with a reason; no stale rows."
+    examples: [5885, 5988, 5783, 5905]
+
+  - id: a11y-gates
+    axis: "§7 Accounting"
+    trigger: { keywords: [aria-, "role=", tabindex, scroll, region, label, contrast, nested, interactive, focus] }
+    sentence: "a11y gates: scroll regions need tabIndex={0}, role=\"region\", a label; no focus theft on first load; ArrowDown must enter an already-open menu; contrast ≥ 4.5:1 for 14px text in every theme; no nested-interactive."
+    check: "Run a11y:audit on the head with no new baseline entries; walk the accessibility tree for name/role/state of every changed control."
+    examples: [5989, 5976, 6034, 6052, 6150]
+
+  - id: merge-state
+    axis: "§7 Accounting"
+    trigger: { always: true }
+    sentence: "Merge main when it moved the same file/contract; stale known-failures become unexpected-pass; resolve registry conflicts keeping both sides."
+    check: "If main moved the same file since your base, merge (never rebase an approved head) and re-run the a11y contract."
+    examples: [6158, 5988, 5885, 5859]
+
+  - id: formatting-build
+    axis: "§7 Accounting"
+    trigger: { always: true }
+    sentence: "Prettier on touched files; package builds (rootDir, TS6059); --filter <pkg> typecheck after shared type changes."
+    check: "pnpm exec prettier --check on touched files; pnpm build; pnpm -F <pkg> typecheck."
+    examples: [5932, 5791, 6039, 6034, 6175]
+
+  - id: pr-body-claims
+    axis: "§8 PR body claims"
+    trigger: { always: true }
+    sentence: "Every behavioral sentence must be backed by a measurement on the exact head: \"The click wiring is unchanged from main\" was measured false on one coordinate; \"no public concept or declaration changed\" while adding two exported props."
+    check: "For each sentence in the body that asserts behavior, attach the measurement or delete the sentence. State the user-visible impact of every intentional difference from main."
+    examples: [6150, 6000, 5832]
