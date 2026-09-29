@@ -1,4 +1,7 @@
-# contrib-board-sync
+# sync — 기여 보드 동기화
+
+> 이 패키지는 workspace 의 `sync/` 에 있다. 명령은 레포 루트에서 `pnpm -F sync <script>` 로 부르고,
+> `members.yml` 은 레포 루트에 있다 (MCP 와 공유).
 
 GitHub PR 상태를 Notion 기여 보드에 자동으로 반영한다.
 
@@ -107,7 +110,7 @@ Notion DB에 rich_text 속성을 하나 만든다. 이름은 `config.yml`에서 
 
 ### 4. 설정 파일
 
-`config.yml`에 감시할 레포와 속성·상태 이름을, `members.yml`에 대상 멤버를 적는다.
+`sync/config.yml`에 감시할 레포와 속성·상태 이름을, 루트 `members.yml`에 대상 멤버를 적는다.
 아래 "설정" 절을 보라.
 
 ### 5. 백필
@@ -117,13 +120,13 @@ Notion DB에 rich_text 속성을 하나 만든다. 이름은 `config.yml`에서 
 채운다. 매칭에 실패한 카드는 목록으로 출력되니 사람이 처리한다.
 
 ```
-pnpm backfill
+pnpm -F sync backfill
 ```
 
 ### 6. dry-run
 
 ```
-pnpm sync --dry-run
+pnpm -F sync sync --dry-run
 ```
 
 어떤 카드가 어디로 옮겨갈지 목록만 뽑는다. **켜기 전에 반드시 한 번 돌려보라.**
