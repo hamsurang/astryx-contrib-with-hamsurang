@@ -1,0 +1,7 @@
+[
+  {"sha": "a1", "commit": {"message": "fix(ChatComposer): keep the name (#6001)\n\nbody"}},
+  {"sha": "a2", "commit": {"message": "docs: touch readme"}},
+  {"sha": "a3", "commit": {"message": "feat(Chat): drawer (#6002)"}},
+  {"sha": "a4", "commit": {"message": "fix(Chat): dup (#6001)"}},
+  {"sha": "a5", "commit": {"message": "chore: unmerged reference (#6003)"}}
+]

@@ -11,6 +11,8 @@ import * as getDoc from './tools/getDoc.js';
 import * as prChecklist from './tools/prChecklist.js';
 import * as authoringGuide from './tools/authoringGuide.js';
 import * as refresh from './tools/refresh.js';
+import * as explainComponentInternals from './tools/explainComponentInternals.js';
+import * as estimateChangeScope from './tools/estimateChangeScope.js';
 
 const NOT_REPO = 'Not an astryx checkout. Set ASTRYX_REPO or run the server from an astryx checkout.';
 
@@ -36,7 +38,7 @@ async function main(): Promise<void> {
   }
 
   if (!isAstryxRepo(repoRoot)) {
-    for (const name of ['rules_for_paths', 'search', 'get_doc', 'pr_checklist', 'authoring_guide', 'refresh']) {
+    for (const name of ['rules_for_paths', 'search', 'get_doc', 'pr_checklist', 'authoring_guide', 'refresh', 'explain_component_internals', 'estimate_change_scope']) {
       server.registerTool(name, { description: NOT_REPO, inputSchema: z.object({}).loose() }, async () => fail(NOT_REPO));
     }
   } else {
@@ -44,7 +46,7 @@ async function main(): Promise<void> {
     const wiki = ensureWiki(wikiDir);
     const ctx = await createContext({ repoRoot, wikiDir });
     if (!wiki.ok) setWikiWarning(ctx.index.warnings, wiki.reason);
-    for (const t of [rulesForPaths, search, getDoc, prChecklist, authoringGuide, refresh]) t.register(server, ctx);
+    for (const t of [rulesForPaths, search, getDoc, prChecklist, authoringGuide, refresh, explainComponentInternals, estimateChangeScope]) t.register(server, ctx);
     console.error(`astryx-contrib: ${ctx.index.docs.size} docs, ${ctx.index.sections.size} sections from ${repoRoot}`);
   }
 

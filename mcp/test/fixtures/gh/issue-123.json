@@ -1,0 +1,1 @@
+{"number": 123, "title": "ChatComposer textarea loses its accessible label when busy", "body": "Repro: render <ChatComposer label=\"Ask\" /> and set isBusy. The TextInput pattern applies.", "labels": [{"name": "bug"}, {"name": "accessibility"}]}

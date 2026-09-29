@@ -1,17 +1,28 @@
 import { KnowledgeIndex } from './index.js';
+import { realGh, resolveCacheDir, type GhRunner } from './sources/gh.js';
+
+export const DEFAULT_UPSTREAM = 'facebook/astryx';
 
 export interface ToolContext {
   repoRoot: string;
   wikiDir?: string;
   index: KnowledgeIndex;
+  /** `gh` runner; tests inject a replay. */
+  gh: GhRunner;
+  /** owner/repo the tools read PRs and issues from. */
+  upstream: string;
+  cacheDir: string;
   rebuild(): Promise<void>;
 }
 
-export async function createContext(opts: { repoRoot: string; wikiDir?: string }): Promise<ToolContext> {
+export async function createContext(opts: { repoRoot: string; wikiDir?: string; gh?: GhRunner; upstream?: string; cacheDir?: string }): Promise<ToolContext> {
   const ctx: ToolContext = {
     repoRoot: opts.repoRoot,
     wikiDir: opts.wikiDir,
     index: await KnowledgeIndex.build(opts),
+    gh: opts.gh ?? realGh,
+    upstream: opts.upstream ?? process.env.ASTRYX_UPSTREAM ?? DEFAULT_UPSTREAM,
+    cacheDir: opts.cacheDir ?? resolveCacheDir(),
     async rebuild() {
       ctx.index = await KnowledgeIndex.build({ repoRoot: ctx.repoRoot, wikiDir: ctx.wikiDir });
     },

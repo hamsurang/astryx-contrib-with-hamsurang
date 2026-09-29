@@ -21,7 +21,7 @@ export function parseFrontmatter(text: string): { frontmatter?: Record<string, u
 
 const LIST_FIELDS = [
   'applies_to', 'verified_by', 'review_triggers', 'families', 'architecture',
-  'modules', 'members', 'components', 'design_specs',
+  'modules', 'members', 'components', 'design_specs', 'owners',
 ] as const;
 
 function list(v: unknown): string[] {
