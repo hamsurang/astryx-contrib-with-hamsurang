@@ -28,7 +28,7 @@ export function rulesForPaths(ctx: ToolContext, input: z.infer<typeof rulesForPa
   const idx = ctx.index;
   const paths = input.paths.map((p) => normalizePath(p, ctx.repoRoot));
   const warnings = [...idx.warnings];
-  const { matches, suppressedDrafts } = idx.recordsForPaths(paths, { includeDraft: input.includeDraft });
+  const { matches, suppressedDrafts, draftMatched } = idx.recordsForPaths(paths, { includeDraft: input.includeDraft });
   for (const id of suppressedDrafts) warnings.push(`draft records suppressed: ${id} (pass includeDraft: true)`);
 
   const result: RulesResult = { records: [], componentSpecs: [], linked: [], wiki: [], always: [], warnings };
@@ -74,7 +74,7 @@ export function rulesForPaths(ctx: ToolContext, input: z.infer<typeof rulesForPa
     result.scoreLedger = { ...idx.scoresMeta, note: 'static-evidence audit; see wiki:Component-Audit-Rubric' };
   }
 
-  const covered = new Set(matches.flatMap((m) => m.matchedBy));
+  const covered = new Set([...matches.flatMap((m) => m.matchedBy), ...draftMatched]);
   for (const p of paths) if (!covered.has(p)) warnings.push(`no record matches ${p}`);
 
   return result;

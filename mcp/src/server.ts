@@ -4,7 +4,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import { z } from 'zod';
 import { createContext, fail, setWikiWarning } from './context.js';
 import { isAstryxRepo, resolveRepoRoot } from './sources/repo.js';
-import { ensureWiki, resolveWikiDir } from './sources/wiki.js';
+import { ensureWiki, resolveWikiDir, wikiStatus } from './sources/wiki.js';
 import * as rulesForPaths from './tools/rulesForPaths.js';
 import * as search from './tools/search.js';
 import * as getDoc from './tools/getDoc.js';
@@ -48,10 +48,12 @@ async function main(): Promise<void> {
       server.registerTool(name, { description: NOT_REPO, inputSchema: z.object({}).loose() }, async () => fail(NOT_REPO));
     }
   } else {
+    // No network at startup: the client's MCP handshake must not wait on a clone. install.sh
+    // pre-clones the wiki and the refresh tool clones or pulls it on demand.
     const wikiDir = resolveWikiDir();
-    const wiki = ensureWiki(wikiDir);
+    const wiki = wikiStatus(wikiDir);
     const ctx = await createContext({ repoRoot, wikiDir });
-    if (!wiki.ok) setWikiWarning(ctx.index.warnings, wiki.reason);
+    if (!wiki.ok) setWikiWarning(ctx.index.warnings, `${wiki.reason}; call refresh to clone it`);
     for (const t of [rulesForPaths, search, getDoc, prChecklist, authoringGuide, refresh, explainComponentInternals, estimateChangeScope, findReferencePr, assessIssueFit, translateKr, simulateReview, validateRepro, inspectA11yTree]) t.register(server, ctx);
     console.error(`astryx-contrib: ${ctx.index.docs.size} docs, ${ctx.index.sections.size} sections from ${repoRoot}`);
   }

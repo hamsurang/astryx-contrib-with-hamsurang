@@ -1,4 +1,4 @@
-import { cached, DAY_MS, ghJson, type GhRunner } from './gh.js';
+import { cached, DAY_MS, ghErrorMessage, ghJson, type GhRunner } from './gh.js';
 
 /** GitHub reads shared by the issue/PR tools. Every function takes the runner so tests can replay. */
 
@@ -89,14 +89,15 @@ export function listLabels(gh: Gh): string[] {
 
 export interface ForkPr { number: number; title: string; body: string; url: string; headRef: string }
 
-/** Open PRs on <login>/<repoName> (the member's fork). A missing fork is an empty list. */
+/** Open PRs on <login>/<repoName> (the member's fork). A missing fork (404) is an empty list; other failures throw. */
 export function forkOpenPrs(gh: Gh, login: string, repoName: string): ForkPr[] {
   try {
     return ghJson<{ number: number; title: string; body: string | null; html_url: string; head: { ref: string } }[]>(gh.run, [
       'api', `repos/${login}/${repoName}/pulls?state=open&per_page=50`,
     ]).map((p) => ({ number: p.number, title: p.title, body: p.body ?? '', url: p.html_url, headRef: p.head.ref }));
-  } catch {
-    return [];
+  } catch (err) {
+    if (/404|Not Found/i.test(ghErrorMessage(err))) return [];
+    throw err;
   }
 }
 

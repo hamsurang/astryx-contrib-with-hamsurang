@@ -27,6 +27,8 @@ export interface PathMatches {
   matches: PathMatch[];
   /** Ids of draft records that matched but were left out because includeDraft was false. */
   suppressedDrafts: string[];
+  /** Paths whose only matches were those suppressed drafts. */
+  draftMatched: string[];
 }
 
 interface Row {
@@ -57,6 +59,11 @@ export class KnowledgeIndex {
     });
     const rows: Row[] = [];
     for (const doc of docs) {
+      const dup = this.docs.get(doc.id);
+      if (dup) {
+        warnings.push(`duplicate record id ${doc.id}: ${doc.path} ignored (kept ${dup.path})`);
+        continue;
+      }
       this.docs.set(doc.id, doc);
       for (const s of doc.sections) {
         this.sections.set(s.id, { docId: doc.id, section: s });
@@ -109,10 +116,12 @@ export class KnowledgeIndex {
   recordsForPaths(paths: string[], { includeDraft = false }: { includeDraft?: boolean } = {}): PathMatches {
     const out = new Map<string, PathMatch>();
     const suppressedDrafts = new Set<string>();
+    const draftMatched = new Set<string>();
     const add = (doc: Doc, matchedBy: string[], via: MatchVia) => {
       if (!matchedBy.length || out.has(doc.id)) return;
       if (doc.frontmatter?.authority === 'draft' && !includeDraft) {
         suppressedDrafts.add(doc.id);
+        for (const p of matchedBy) draftMatched.add(p);
         return;
       }
       out.set(doc.id, { doc, matchedBy, via });
@@ -130,28 +139,28 @@ export class KnowledgeIndex {
       }
     }
 
-    const matchedIds = () => new Set(out.keys());
     for (const doc of this.docs.values()) {
       const fm = doc.frontmatter;
       if (fm?.kind !== 'family') continue;
-      const hit = fm.members.filter((m) => matchedIds().has(m));
+      const hit = fm.members.filter((m) => out.has(m));
       add(doc, hit.flatMap((m) => out.get(m)!.matchedBy), 'members');
     }
     for (const doc of this.docs.values()) {
       const fm = doc.frontmatter;
       if (fm?.kind !== 'design') continue;
-      const viaFam = fm.families.filter((f) => matchedIds().has(f));
+      const viaFam = fm.families.filter((f) => out.has(f));
       if (viaFam.length) {
         add(doc, viaFam.flatMap((f) => out.get(f)!.matchedBy), 'families');
         continue;
       }
-      const viaComp = fm.components.filter((c) => matchedIds().has(c));
+      const viaComp = fm.components.filter((c) => out.has(c));
       add(doc, viaComp.flatMap((c) => out.get(c)!.matchedBy), 'components');
     }
 
     return {
       matches: [...out.values()].map((m) => ({ ...m, matchedBy: [...new Set(m.matchedBy)] })),
       suppressedDrafts: [...suppressedDrafts],
+      draftMatched: [...draftMatched],
     };
   }
 

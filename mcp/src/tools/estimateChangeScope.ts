@@ -4,7 +4,8 @@ import { CHEAT_SHEET_ID, matchCheatSheet, parseCheatSheet, type CheatMatch, type
 import { analyzeComponent, locateComponent, suggestComponents, type SyncTarget } from '../component.js';
 import { fail, json, type ToolContext } from '../context.js';
 import { dirContains } from '../match.js';
-import { ghErrorMessage, ghJson } from '../sources/gh.js';
+import { ghErrorMessage } from '../sources/gh.js';
+import { fetchIssue, type Gh } from '../sources/github.js';
 import { prsTouching, prStats, type PrStats } from '../sources/prs.js';
 
 export const estimateChangeScopeInput = z.object({
@@ -55,12 +56,10 @@ export function estimateChangeScope(ctx: ToolContext, input: z.infer<typeof esti
   const keywords = new Set((input.keywords ?? []).map((k) => k.toLowerCase()));
   if (input.issue) {
     try {
-      const raw = ghJson<{ number: number; title: string; body: string; labels: { name: string }[] }>(ctx.gh, [
-        'issue', 'view', String(input.issue), '--repo', ctx.upstream, '--json', 'number,title,body,labels',
-      ]);
-      const labels = raw.labels.map((l) => l.name);
-      issue = { number: raw.number, title: raw.title, labels };
-      for (const k of keywordsFromIssue({ title: raw.title, labels, body: raw.body ?? '' })) keywords.add(k.toLowerCase());
+      const gh: Gh = { run: ctx.gh, upstream: ctx.upstream, cacheDir: ctx.cacheDir, now: ctx.now };
+      const raw = fetchIssue(gh, input.issue);
+      issue = { number: raw.number, title: raw.title, labels: raw.labels };
+      for (const k of keywordsFromIssue({ title: raw.title, labels: raw.labels, body: raw.body })) keywords.add(k.toLowerCase());
     } catch (err) {
       warnings.push(`issue #${input.issue} not loaded: ${ghErrorMessage(err)}`);
     }
@@ -105,7 +104,7 @@ export function estimateChangeScope(ctx: ToolContext, input: z.infer<typeof esti
 
   let estimate: EstimateResult['estimate'] = { sizeClass: 'insufficient data' };
   try {
-    const { prs } = prsTouching({ run: ctx.gh, upstream: ctx.upstream, cacheDir: ctx.cacheDir }, loc.dir);
+    const { prs } = prsTouching({ run: ctx.gh, upstream: ctx.upstream, cacheDir: ctx.cacheDir, now: ctx.now }, loc.dir);
     const basis = prStats(prs);
     if (basis && basis.prs >= 3) estimate = { sizeClass: sizeClassOf(basis.medianFiles, basis.medianLines), basis };
     else if (basis) estimate = { sizeClass: 'insufficient data', basis };

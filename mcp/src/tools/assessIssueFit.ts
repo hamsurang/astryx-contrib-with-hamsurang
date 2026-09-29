@@ -3,7 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { componentNames } from '../component.js';
 import { fail, json, type ToolContext } from '../context.js';
 import { daysBetween, maintainersFromRecords, standingOf, type Standing } from '../people.js';
-import { ghErrorMessage } from '../sources/gh.js';
+import { cached, ghErrorMessage } from '../sources/gh.js';
 import { componentNamesIn, fetchIssue, fetchIssueComments, fetchLinkedPrs, forkOpenPrs, searchIssues, type Gh, type Issue, type IssueComment, type LinkedPr, type SearchHit } from '../sources/github.js';
 import { loadMembers } from '../sources/members.js';
 
@@ -111,11 +111,17 @@ export function assessIssueFit(ctx: ToolContext, input: z.infer<typeof assessIss
   if (warning) warnings.push(warning);
   const repoName = ctx.upstream.split('/')[1];
   const teamInProgress: AssessResult['teamInProgress'] = [];
+  const addInProgress = (entry: AssessResult['teamInProgress'][number]) => { if (!teamInProgress.some((t) => t.pr === entry.pr)) teamInProgress.push(entry); };
   for (const m of members) {
-    for (const pr of forkOpenPrs(gh, m.login, repoName)) {
-      if (mentionsIssue(`${pr.title}\n${pr.body}`, ctx.upstream, input.issue)) teamInProgress.push({ login: m.login, fork: `${m.login}/${repoName}`, pr: pr.url });
+    try {
+      const forkPrs = cached({ dir: ctx.cacheDir, bucket: 'forks', key: `${m.login}/${repoName}`, ttlMs: 10 * 60_000, now: ctx.now }, () => forkOpenPrs(gh, m.login, repoName)).value;
+      for (const pr of forkPrs) {
+        if (mentionsIssue(`${pr.title}\n${pr.body}`, ctx.upstream, input.issue)) addInProgress({ login: m.login, fork: `${m.login}/${repoName}`, pr: pr.url });
+      }
+    } catch (err) {
+      warnings.push(`fork PRs of ${m.login} not loaded: ${ghErrorMessage(err)}`);
     }
-    for (const pr of linkedPrs) if (pr.author === m.login && pr.state === 'open') teamInProgress.push({ login: m.login, pr: pr.url });
+    for (const pr of linkedPrs) if (pr.author === m.login && pr.state === 'open') addInProgress({ login: m.login, pr: pr.url });
   }
 
   let siblings: SearchHit[] = [];

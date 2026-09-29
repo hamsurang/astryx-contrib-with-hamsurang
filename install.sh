@@ -43,11 +43,12 @@ echo "node $(node -v) · pnpm $(pnpm -v) · gh $(gh auth status 2>&1 | grep -o '
 step "astryx 체크아웃 찾기"
 is_checkout() { [ -d "$1/packages/core" ] && [ -f "$1/docs/README.md" ]; }
 if [ -z "$REPO" ]; then
-  for c in "$PWD" "$HOME/Desktop/web_develop/open_source/astryx" "$HOME/astryx" "$HOME/src/astryx" "$HOME/code/astryx" "$ROOT/../astryx"; do
+  for c in "$PWD" "$ROOT/../astryx" "$HOME/astryx" "$HOME/src/astryx" "$HOME/code/astryx"; do
     if is_checkout "$c"; then REPO="$c"; break; fi
   done
 fi
 if [ -z "$REPO" ]; then
+  [ -t 0 ] || fail "astryx 체크아웃을 못 찾았다. --repo <경로> 를 넘겨라."
   read -r -p "astryx 체크아웃 경로를 입력하라 (예: ~/astryx): " REPO
   REPO="${REPO/#\~/$HOME}"
 fi

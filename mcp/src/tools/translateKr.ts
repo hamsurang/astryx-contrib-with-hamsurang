@@ -65,7 +65,9 @@ export function translateKr(ctx: ToolContext, input: z.infer<typeof translateKrI
     if (parsed.kind === 'pull') {
       const pr = fetchPrView(gh, parsed.number);
       ({ title, state, url, body, labels } = pr);
-      authorLogin = pr.author; authorAssoc = '';
+      authorLogin = pr.author;
+      // gh pr view has no authorAssociation; the issues endpoint answers for PR numbers too.
+      try { authorAssoc = fetchIssue(gh, parsed.number).association; } catch (err) { authorAssoc = ''; warnings.push(`author association not loaded: ${ghErrorMessage(err)}`); }
       for (const c of pr.comments) thread.push({ kind: 'comment', author: c.author, standing: standingOf(c.author, c.association, maintainers).standing, timestamp: c.createdAt, url: c.url, body: c.body });
       for (const r of pr.reviews) if (r.body || r.state !== 'COMMENTED') thread.push({ kind: 'review', author: r.author, standing: standingOf(r.author, r.association, maintainers).standing, state: r.state, timestamp: r.submittedAt, url: r.url, body: r.body });
       let inline: ReturnType<typeof fetchInlineComments> = [];
