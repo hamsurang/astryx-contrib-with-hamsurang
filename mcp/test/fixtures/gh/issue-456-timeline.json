@@ -1,0 +1,6 @@
+[
+  {"event": "labeled"},
+  {"event": "cross-referenced", "source": {"issue": {"number": 6395, "title": "fix(Selector): name it", "state": "open", "html_url": "https://github.com/facebook/astryx/pull/6395", "user": {"login": "kyu"}, "pull_request": {"merged_at": null}}}},
+  {"event": "cross-referenced", "source": {"issue": {"number": 6000, "title": "older", "state": "closed", "html_url": "https://github.com/facebook/astryx/pull/6000", "user": {"login": "x"}, "pull_request": {"merged_at": "2026-08-01T00:00:00Z"}}}},
+  {"event": "cross-referenced", "source": {"issue": {"number": 999, "title": "an issue, not a pr", "state": "open", "html_url": "https://github.com/facebook/astryx/issues/999", "user": {"login": "x"}}}}
+]

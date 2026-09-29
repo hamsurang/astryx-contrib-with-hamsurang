@@ -1,0 +1,5 @@
+[
+  {"id": 501, "user": {"login": "cixzhang"}, "author_association": "CONTRIBUTOR", "state": "CHANGES_REQUESTED", "submitted_at": "2026-09-21T00:00:00Z", "body": "Could we derive the name from the label?", "html_url": "https://github.com/facebook/astryx/pull/6395#pullrequestreview-501"},
+  {"id": 502, "user": {"login": "astracat-bot"}, "author_association": "NONE", "state": "APPROVED", "submitted_at": "2026-09-23T00:00:00Z", "body": "", "html_url": "https://github.com/facebook/astryx/pull/6395#pullrequestreview-502"},
+  {"id": 503, "user": {"login": "cixzhang"}, "author_association": "CONTRIBUTOR", "state": "COMMENTED", "submitted_at": "2026-09-23T01:00:00Z", "body": "", "html_url": "https://github.com/facebook/astryx/pull/6395#pullrequestreview-503"}
+]

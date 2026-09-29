@@ -85,7 +85,7 @@ export function reviewRounds(pr: PrSummary): number {
   return pr.reviews.filter((r) => r.state === 'CHANGES_REQUESTED').length;
 }
 
-function median(xs: number[]): number {
+export function median(xs: number[]): number {
   const s = [...xs].sort((a, b) => a - b);
   const mid = Math.floor(s.length / 2);
   return s.length % 2 ? s[mid] : (s[mid - 1] + s[mid]) / 2;

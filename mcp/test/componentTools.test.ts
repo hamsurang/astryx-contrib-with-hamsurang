@@ -88,7 +88,7 @@ describe('estimate_change_scope', () => {
   test('prop keywords add the doc.mjs; a missing issue is a warning, not a failure', () => {
     const r = estimateChangeScope(ctx, { name: 'ChatComposer', issue: 999, keywords: ['default prop'] }) as EstimateResult;
     expect(r.issue).toBeUndefined();
-    expect(r.warnings).toContain('issue #999 not loaded: GraphQL: Could not resolve to an issue with the number of 999. (repository.issue)');
+    expect(r.warnings).toContain('issue #999 not loaded: gh: Not Found (HTTP 404) [issue-999.json]');
     expect(r.accounting.some((a) => a.rule === 'doc' && a.file.endsWith('ChatComposer.doc.mjs'))).toBe(true);
     expect(r.accounting.some((a) => a.rule === 'a11y')).toBe(false);
   });

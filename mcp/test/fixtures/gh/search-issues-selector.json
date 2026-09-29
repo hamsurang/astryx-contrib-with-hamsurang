@@ -1,0 +1,4 @@
+{"total_count": 2, "items": [
+  {"number": 456, "title": "Selector bottom sheet listbox has no accessible name", "state": "open", "html_url": "https://github.com/facebook/astryx/issues/456", "user": null, "author_association": "NONE", "labels": [], "assignees": [], "created_at": "", "updated_at": "", "closed_at": null},
+  {"number": 300, "title": "MultiSelector listbox name", "state": "closed", "html_url": "https://github.com/facebook/astryx/issues/300", "user": null, "author_association": "NONE", "labels": [], "assignees": [], "created_at": "", "updated_at": "", "closed_at": "2026-06-01T00:00:00Z"}
+]}

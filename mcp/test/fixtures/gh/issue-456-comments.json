@@ -1,0 +1,4 @@
+[
+  {"user": {"login": "someone"}, "author_association": "NONE", "created_at": "2026-09-02T00:00:00Z", "body": "same here", "html_url": "https://github.com/facebook/astryx/issues/456#issuecomment-1"},
+  {"user": {"login": "cixzhang"}, "author_association": "CONTRIBUTOR", "created_at": "2026-09-03T00:00:00Z", "body": "We should name it from the label rather than adding a prop.", "html_url": "https://github.com/facebook/astryx/issues/456#issuecomment-2"}
+]

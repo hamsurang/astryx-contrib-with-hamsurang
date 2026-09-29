@@ -15,6 +15,7 @@ export interface Frontmatter {
   components: string[];
   design_specs: string[];
   owners: string[];
+  approved_by: string[];
   parent_component?: string;
 }
 

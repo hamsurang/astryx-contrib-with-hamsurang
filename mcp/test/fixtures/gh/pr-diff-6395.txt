@@ -1,0 +1,20 @@
+diff --git a/.changeset/selector-name.md b/.changeset/selector-name.md
+new file mode 100644
+--- /dev/null
++++ b/.changeset/selector-name.md
+@@ -0,0 +1,3 @@
++---
++'@astryxdesign/core': patch
++---
+diff --git a/packages/core/src/Selector/Selector.tsx b/packages/core/src/Selector/Selector.tsx
+--- a/packages/core/src/Selector/Selector.tsx
++++ b/packages/core/src/Selector/Selector.tsx
+@@ -1,3 +1,3 @@
+-old
++new
++more
+diff --git a/packages/core/src/Selector/__tests__/Selector.a11y.chromium.spec.ts b/packages/core/src/Selector/__tests__/Selector.a11y.chromium.spec.ts
+--- a/x
++++ b/x
+@@ -1 +1,2 @@
++test

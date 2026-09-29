@@ -75,8 +75,8 @@ export function locateComponent(root: string, name: string): ComponentLocation |
   return undefined;
 }
 
-export function suggestComponents(root: string, name: string, n = 3): string[] {
-  const lower = name.toLowerCase();
+/** Every component directory and PascalCase impl stem across the packages. Empty when root is not a checkout. */
+export function componentNames(root: string): Set<string> {
   const names = new Set<string>();
   for (const pkg of PACKAGES) {
     for (const d of componentDirs(root, pkg)) {
@@ -86,7 +86,12 @@ export function suggestComponents(root: string, name: string, n = 3): string[] {
       }
     }
   }
-  const scored = [...names].map((c) => {
+  return names;
+}
+
+export function suggestComponents(root: string, name: string, n = 3): string[] {
+  const lower = name.toLowerCase();
+  const scored = [...componentNames(root)].map((c) => {
     const l = c.toLowerCase();
     const score = l === lower ? 3 : l.includes(lower) || lower.includes(l) ? 2 : l.slice(0, 3) === lower.slice(0, 3) ? 1 : 0;
     return { c, score };
