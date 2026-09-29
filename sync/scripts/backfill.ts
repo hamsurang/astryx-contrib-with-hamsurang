@@ -4,6 +4,7 @@
  *
  *   NOTION_TOKEN=... NOTION_DATABASE_ID=... GITHUB_TOKEN=... pnpm backfill --dry-run
  */
+import { resolve } from 'node:path'
 import { loadConfig } from '../src/config.js'
 import { NotionClient } from '../src/notion.js'
 
@@ -19,7 +20,7 @@ if (!notionToken || !databaseId || !githubToken) {
   process.exit(1)
 }
 
-const config = loadConfig(process.cwd())
+const config = loadConfig(process.cwd(), resolve(process.cwd(), '..'))
 const notion = new NotionClient(notionToken, databaseId, config)
 await notion.verifySchema()
 

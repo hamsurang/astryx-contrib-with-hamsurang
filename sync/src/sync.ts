@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { loadConfig } from './config.js'
 import { fetchPullRequests } from './github.js'
 import { NotionClient } from './notion.js'
@@ -19,7 +20,7 @@ export async function runSync(options: { dryRun: boolean }): Promise<number> {
   if (!databaseId) throw new Error('NOTION_DATABASE_ID 가 없다')
   if (!githubToken) throw new Error('GITHUB_TOKEN 이 없다')
 
-  const config = loadConfig(process.cwd())
+  const config = loadConfig(process.cwd(), resolve(process.cwd(), '..'))
   const notion = new NotionClient(notionToken, databaseId, config)
 
   await notion.verifySchema()

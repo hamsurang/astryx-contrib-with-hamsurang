@@ -1,0 +1,15 @@
+packages:
+  - sync
+  - mcp
+
+catalog:
+  '@modelcontextprotocol/server': ^2.0.0
+  '@types/node': ^22.10.2
+  '@types/picomatch': ^4.0.3
+  minisearch: ^7.2.0
+  picomatch: ^4.0.7
+  tsx: ^4.19.2
+  typescript: ^5.9.0
+  vitest: ^5.0.0
+  yaml: ^2.9.0
+  zod: ^4.5.4

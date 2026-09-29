@@ -21,7 +21,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm sync ${{ inputs.dryRun && '--dry-run' || '' }}
+      - run: pnpm -F sync sync ${{ inputs.dryRun && '--dry-run' || '' }}
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}

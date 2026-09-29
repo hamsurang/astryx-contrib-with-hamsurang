@@ -1,24 +1,13 @@
 {
-  "name": "contrib-board-sync",
+  "name": "astryx-contrib-with-hamsurang",
   "private": true,
   "type": "module",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "sync": "tsx src/cli.ts",
-    "backfill": "tsx scripts/backfill.ts",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "yaml": "^2.6.1"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.2",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
   },
   "packageManager": "pnpm@10.28.1"
 }

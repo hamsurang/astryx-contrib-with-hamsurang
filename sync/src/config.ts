@@ -8,9 +8,9 @@ function must<T>(value: T | undefined | null, key: string): T {
   return value
 }
 
-export function loadConfig(dir: string): Config {
+export function loadConfig(dir: string, membersDir = dir): Config {
   const raw = parse(readFileSync(join(dir, 'config.yml'), 'utf8')) ?? {}
-  const membersRaw = parse(readFileSync(join(dir, 'members.yml'), 'utf8')) ?? {}
+  const membersRaw = parse(readFileSync(join(membersDir, 'members.yml'), 'utf8')) ?? {}
 
   const props = must(raw.notion?.properties, 'notion.properties')
   const status = must(raw.notion?.status, 'notion.status')
