@@ -1,4 +1,6 @@
 name: sync
+# 이슈 알림 구간 계산이 dry-run 실행을 건너뛸 수 있게 제목에 표시한다.
+run-name: sync${{ inputs.dryRun && ' (dry-run)' || '' }}
 
 on:
   workflow_dispatch:
@@ -9,6 +11,11 @@ on:
         default: true
   schedule:
     - cron: '0 * * * *'
+
+# 이슈 알림 구간을 정하려고 이 workflow 의 실행 기록을 읽는다.
+permissions:
+  contents: read
+  actions: read
 
 jobs:
   sync:
@@ -26,3 +33,5 @@ jobs:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_WEBHOOK_TEAM: ${{ secrets.SLACK_WEBHOOK_TEAM }}
+          SLACK_WEBHOOK_ISSUES: ${{ secrets.SLACK_WEBHOOK_ISSUES }}

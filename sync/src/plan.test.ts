@@ -35,6 +35,12 @@ function pr(over: Partial<PullRequest> = {}): PullRequest {
     state: 'OPEN',
     reviewDecision: null,
     createdAt: '2026-09-01T00:00:00Z',
+    number: 5982,
+    additions: 0,
+    deletions: 0,
+    changedFiles: 0,
+    labels: [],
+    closingIssues: [],
     ...over,
   }
 }

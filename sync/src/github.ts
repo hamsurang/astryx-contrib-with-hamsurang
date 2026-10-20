@@ -1,4 +1,4 @@
-import type { Config, PrState, PullRequest, ReviewDecision } from './types.js'
+import type { Config, Issue, PrState, PullRequest, ReviewDecision } from './types.js'
 
 const ENDPOINT = 'https://api.github.com/graphql'
 const MAX_QUERY_LENGTH = 256
@@ -10,6 +10,9 @@ query($q: String!, $after: String) {
     nodes {
       ... on PullRequest {
         title url state createdAt headRefName
+        number additions deletions changedFiles
+        labels(first: 10) { nodes { name } }
+        closingIssuesReferences(first: 5) { nodes { number } }
         latestReviews(first: 10) { nodes { state } }
         author { login ... on User { name } }
         repository { nameWithOwner }
@@ -59,6 +62,12 @@ type SearchNode = {
   state: PrState
   createdAt: string
   headRefName: string
+  number: number
+  additions: number
+  deletions: number
+  changedFiles: number
+  labels?: { nodes: ({ name: string } | null)[] } | null
+  closingIssuesReferences?: { nodes: ({ number: number } | null)[] } | null
   latestReviews: { nodes: ({ state: string } | null)[] } | null
   author: { login: string; name?: string | null } | null
   repository: { nameWithOwner: string } | null
@@ -155,8 +164,72 @@ export async function fetchPullRequests(config: Config, token: string): Promise<
       state: node.state,
       reviewDecision: reviewDecisionOf(node),
       createdAt: node.createdAt,
+      number: node.number,
+      additions: node.additions,
+      deletions: node.deletions,
+      changedFiles: node.changedFiles,
+      labels: (node.labels?.nodes ?? []).flatMap((l) => (l ? [l.name] : [])),
+      closingIssues: (node.closingIssuesReferences?.nodes ?? []).flatMap((i) => (i ? [i.number] : [])),
     })
   }
 
   return prs
+}
+
+async function rest<T>(path: string, token: string): Promise<T> {
+  const response = await fetch(`https://api.github.com${path}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'User-Agent': 'contrib-board-sync',
+    },
+  })
+  if (!response.ok) throw new Error(`GitHub REST ${response.status}: ${await response.text()}`)
+  return (await response.json()) as T
+}
+
+type WorkflowRun = { id: number; workflow_id: number; display_title: string; run_started_at: string }
+
+export type IssueWindow = { from: string; to: string }
+
+/**
+ * 새 이슈를 알릴 구간. 직전에 성공한 실행의 시작 시각부터 이번 실행의 시작 시각까지다.
+ * 실행이 불규칙해도 구간이 빈틈 없이 이어져서 놓치는 이슈가 없다. dry-run 실행은
+ * 아무것도 보내지 않았으므로 건너뛴다(sync.yml 의 run-name 에 dry-run 을 표시한다).
+ * 성공한 실행이 없으면 null 이다 — 첫 실행에 과거 이슈를 전부 쏟아내지 않기 위해서다.
+ */
+export async function fetchIssueWindow(repo: string, runId: string, token: string): Promise<IssueWindow | null> {
+  const current = await rest<WorkflowRun>(`/repos/${repo}/actions/runs/${runId}`, token)
+  // ponytail: 최근 성공 50건 안에 실제 실행이 없으면 null. dry-run 만 50번 연속일 일은 없다.
+  const { workflow_runs } = await rest<{ workflow_runs: WorkflowRun[] }>(
+    `/repos/${repo}/actions/workflows/${current.workflow_id}/runs?status=success&per_page=50`,
+    token,
+  )
+  const previous = workflow_runs.find((run) => run.id !== current.id && !run.display_title.includes('dry-run'))
+  return previous ? { from: previous.run_started_at, to: current.run_started_at } : null
+}
+
+type IssueSearchResponse = {
+  items: {
+    number: number
+    title: string
+    html_url: string
+    body: string | null
+    user: { login: string } | null
+    labels: { name: string }[]
+  }[]
+}
+
+export async function fetchNewIssues(upstream: string, window: IssueWindow, token: string): Promise<Issue[]> {
+  const q = encodeURIComponent(`repo:${upstream} is:issue created:${window.from}..${window.to}`)
+  // ponytail: 한 페이지(100건)만 본다. 한 구간에 이슈가 100건을 넘으면 페이지네이션을 붙인다.
+  const { items } = await rest<IssueSearchResponse>(`/search/issues?q=${q}&sort=created&order=asc&per_page=100`, token)
+  return items.map((item) => ({
+    number: item.number,
+    title: item.title,
+    url: item.html_url,
+    author: item.user?.login ?? 'ghost',
+    body: item.body ?? '',
+    labels: item.labels.map((l) => l.name),
+  }))
 }

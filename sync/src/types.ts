@@ -27,7 +27,16 @@ export type PullRequest = {
   state: PrState
   reviewDecision: ReviewDecision
   createdAt: string
+  number: number
+  additions: number
+  deletions: number
+  changedFiles: number
+  labels: string[]
+  /** Closes #n 로 연결된 이슈 번호. */
+  closingIssues: number[]
 }
+
+export type Issue = { number: number; title: string; url: string; author: string; body: string; labels: string[] }
 
 export type Card = {
   pageId: string
